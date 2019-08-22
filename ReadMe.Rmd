@@ -1,6 +1,6 @@
 ---
 title: "ReadMe"
-author: "Daniel"
+author: "Daniel DeWaters"
 date: "8/7/2019"
 output: html_document
 ---
@@ -9,6 +9,44 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# ReadMe
- 
- 
+This is the ReadMe file for the Getting and Cleaning Data Course Project, which will explain my analysis process
+
+
+I start by reading in all the data files: the testing and training data, the activity labels corresponding to the data, and the feature labels. I will list off the objectives from the course project page in the order that I fulfilled then in my script and how I solved each objective.
+
+Objective #1 - "Merge the training and the test sets to create one data set"
+  I merged the activity labels to their corresponding datasets using cbind() and rename the column in both tables to "labels" to avoid any conflict when I merge the testing and training data. I then combine the test and training data using rbind().
+
+
+Objective #3 - "Use descriptive activity names to name the activities in the data set"
+  Since the activity labels in the files are represented by integers, I used the revalue() function to change the numbers to their corresponding activity labels as follows:
+1 - walking
+2 - walking upstairs
+3 - walking downstairs
+4 - sitting
+5 - standing
+6 - laying
+
+
+Objective #4 - "Appropriately label the data set with descriptive variable names"
+  I took the feature names from the features.txt file and assigned them to the column names, after adding "activity" to the end of the names vector for the activity labels column
+
+
+Objective #2 - "Extract only the measurements on the mean and standard deviation for each measurement"
+  I ran a regular expressions search on the column names to find the features that are means and std, and I subset the relevant columns to a new table
+
+
+To facilitate objective #5, I melted all of the features columns, converting the dataset into its narrow form. Every feature column had a measurement and dimension component, so I split those columns into their own variables. The resulting columns are a little messy, so I cleaned them up by removing the parenthesis from the measurement column using gsub() and replacing "std" with "standard deviation" to make them more descriptive. I then casted the feature, measurement, and dimension column to factors. This completes objectives 1-4 to make the first tidy dataset, described below.
+
+
+The tidy dataset consists for 6 columns:
+1. subjectID - numeric, contains ID numbers of the individual obesrvations from the original untidy dataset
+2. activity - factor, contains the activity labels that the observations correspond to. Consists of "walking", "walking upstairs", "walking downstairs", "sitting", "standing", "laying"
+3. feature - factor, contains features that the smartphone accelerometer and gyroscope measured for each observation. Consists of "fBodyAcc", "fBodyAccJerk", "fBodyAccMag", "fBodyBodyAccJerkMag", "fBodyBodyGyroJerkMag", "fBodyBodyGyroMag", "fBodyGyro", "tBodyAcc", "tBodyAccJerk", "tBodyAccJerkMag", "tBodyAccMag", "tBodyGyro", "tBodyGyroJerk", "tBodyGyroJerkMag", "tBodyGyroMag", "tBodyAccMag", "tBodyGyro", "tBodyGyroJerk", "tBodyGyroJerkMag", "tBodyGyroMag", "tGravityAcc", "tGravityAccMag"
+4. measurement - factor, consist of the feature's type of value, "mean" or "standard deviation"
+5. dimension - factor, consists of the dimension that the feature's observation was recorded in, "X", "Y", "Z"
+6. value - numeric, the value of the observation
+
+
+Objective #5 -"From the data set in step 4, create a second, independent tidy data set with the average of each variable for each activity and each subject"
+  I used group_by() to gather groups of each feature, measurement, dimension, and activity, and then I used summarise() to apply the mean to all of the groups, resulting in the final tidy data means.

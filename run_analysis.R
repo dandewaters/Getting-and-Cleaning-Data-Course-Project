@@ -47,7 +47,7 @@ combined_data <- rbind(labeled_test_data, labeled_train_data)
 
 
 ## Objective 3 - Add descriptive activity labels to dataset
-combined_data$labels <- as.factor(revalue(combined_data$labels, replace = c("1"="WALKING", "2"="WALKING UPSTAIRS", "3"="WALKING DOWNSTAIRS", "4"="SITTING", "5"="STANDING", "6"="LAYING")))
+combined_data$labels <- as.factor(revalue(combined_data$labels, replace = c("1"="walking", "2"="walking upstairs", "3"="walking downstairs", "4"="sitting", "5"="standing", "6"="laying")))
 
 
 
@@ -63,7 +63,7 @@ names(combined_data) <- all_features
 
 ## Objective 2 - Extract columns that are means and standard deviations
 # Search for columns with names that contain "mean" or "std"
-relevant_columns <- grep("std|mean", names(combined_data))
+relevant_columns <- grep("std\\(\\)|mean\\(\\)", names(combined_data))
 relevant_data <- combined_data[relevant_columns]
 
 # Makes row names as IDs for melting
@@ -93,7 +93,7 @@ final_tidy_data <-
   # Remove parenthesis
   mutate(measurement=gsub("\\(\\)", "", measurement)) %>%
   # Replace "std" with "standard deviation" and "meanfreq" with "mean frequency"
-  mutate(measurement = revalue(measurement, replace = c("std"="standard deviation", "meanFreq"="mean frequency"))) %>%
+  mutate(measurement = revalue(measurement, replace = c("std"="standard deviation"))) %>%
   # Cast features, measurements, and dimensions to factors
   mutate(feature = as.factor(feature)) %>%
   mutate(measurement = as.factor(measurement)) %>%
@@ -114,3 +114,6 @@ tidy_data_mean <-
 
 # Display final result of means
 View(tidy_data_mean)
+
+
+
