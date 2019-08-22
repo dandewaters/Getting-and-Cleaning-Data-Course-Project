@@ -1,5 +1,8 @@
 library(plyr)
 library(dplyr)
+library(reshape2)
+library(data.table)
+library(tidyverse)
 
 ## File paths
 # Test datasets and its corresponding activity labels
@@ -38,6 +41,9 @@ better_train_labels <- as.factor(revalue(train_labels, replace = c("1"="WALKING"
 labeled_test_data <- cbind(test_data, better_test_labels)
 labeled_train_data <- cbind(train_data, better_train_labels)
 
+# Fix label column name to avoid error when merging
+setnames(labeled_test_data, "better_test_labels", "labels")
+setnames(labeled_train_data, "better_train_labels", "labels")
 
 
 ## Merge the train and test data sets
@@ -59,17 +65,74 @@ names(combined_data) <- all_features
 # Search for columns with names that contain "mean" or "std"
 relevant_columns <- grep("std|mean", names(combined_data))
 relevant_data <- combined_data[relevant_columns]
-# Add in activity labels column, completing the tidy dataset in objectives 1-4
-final_tidy_data <- cbind(relevant_data, combined_data["activity"])
+# Makes row names as IDs for melting
+subjectID <- 1:dim(relevant_data)[1]
+# Re-add activity labels and subject ID columns
+relevant_data <- cbind(relevant_data, combined_data["activity"], subjectID)
 
 
+
+## Reshape Data into narrow form, melting columns by feature, dimension, and measurement
+# Get column names for melting (Same columns I used from before)
+melting_columns <- names(combined_data[relevant_columns])
+# Melt features
+molten_data <- melt(relevant_data, id=c("subjectID", "activity"), measure.vars = melting_columns)
+# Fix feature column name
+setnames(molten_data, "variable", "feature")
+# Cast feature column to character vector for splitting
+molten_data$feature <- as.character(molten_data$feature)
+
+# add columns for dimension and measurement
+# Searches feature names for dimension 
+make_dimension <- function(feature){
+  sapply(feature, function(x) if(grep("-X", x)) "X" else if(grep("-Y", x)) "Y" else if(grep("-Z", x)) "Z" else NA)
+}
+# Searches feature names for measurement
+make_measurement <- function(measurement){
+  sapply(measurement, function(x) if(grep("mean()", x)) "Mean" else if(grep("std()", x)) "Standard Deviation" else if(grep("meanFreq()", x)) "Mean Frequency")
+}
+#make_dimension <- function(value){
+#       if(grep("-X", value)){"X"}
+#  else if(grep("-Y", value)){"Y"}
+#  else if(grep("-Z", value)){"Z"}
+#  else{return(NA)}
+#}
+# Searches feature names for measurement
+#make_measurement <- function(value){
+#  if(grep("mean()", value)){return("Mean")}
+#  else if(grep("std()", value)){return("Standard Deviation")}
+#  else if(grep("meanFreq()", value)){return("Mean Frequency")}
+#  else{return(NA)}
+#}
+
+final_tidy_data <- tidyr::separate(data=molten_data, col=feature, into=c("feature", "measurement", "dimension"), sep="-", fill="right")
+final_tidy_data %>%
+  mutate(measurement=gsub("\\(\\)", "", measurement)) %>%
+  mutate(measurement=as.factor(measurement)) %>%
+  mutate(dimension=as.factor(dimension))
+  
+# Adds dimension and measurement columns, cleans variable column
+#final_tidy_data <- molten_data %>%
+#  mutate(dimension=make_dimension(feature)) %>%
+#  mutate(measurement=make_measurement(feature)) %>%
+#  mutate(variable=gsub("-mean|-std|-meanfreq|-X|-Y|-Z|\\(\\)", "", variable))
+
+View(final_tidy_data)
+sum(is.na(final_tidy_data$dimension))
+table()
 
 ## Make second dataset with average of each variable for each activity and subject
 # Make groups
 
 ## Try this vvv
-by_activity_groups <- group_by(final_tidy_data, activity)
-summarize(by_activity_groups, mean)
+#by_activity_groups <- group_by(final_tidy_data, activity)
+#summarize(by_activity_groups, mean)
+tidy_data_mean <-
+  final_tidy_data %>%
+  group_by(activity) %>%
+  summarise(tBodyAccMean = mean())
+
+
 
 # Incase that doesn't work:
 walking_data <- final_tidy_data[final_tidy_data$activity == "WALKING",]
@@ -90,16 +153,58 @@ laying_mean <- lapply(laying_data, mean)
 # Recombine activity groups into one tidy dataset
 tidy_data_mean <- rbind(walking_mean, walking_upstairs_mean, walking_downstairs_mean, sitting_mean, standing_mean, laying_mean)
 
+--"tBodyAcc-mean()-X"               "tBodyAcc-mean()-Y"               "tBodyAcc-mean()-Z"              
+--"tBodyAcc-std()-X"                "tBodyAcc-std()-Y"                "tBodyAcc-std()-Z"               
+--"tGravityAcc-mean()-X"            "tGravityAcc-mean()-Y"            "tGravityAcc-mean()-Z"           
+--"tGravityAcc-std()-X"             "tGravityAcc-std()-Y"             "tGravityAcc-std()-Z"            
+--"tBodyAccJerk-mean()-X"           "tBodyAccJerk-mean()-Y"           "tBodyAccJerk-mean()-Z"          
+--"tBodyAccJerk-std()-X"            "tBodyAccJerk-std()-Y"            "tBodyAccJerk-std()-Z"           
+--"tBodyGyro-mean()-X"              "tBodyGyro-mean()-Y"              "tBodyGyro-mean()-Z"             
+--"tBodyGyro-std()-X"               "tBodyGyro-std()-Y"               "tBodyGyro-std()-Z"              
+--"tBodyGyroJerk-mean()-X"          "tBodyGyroJerk-mean()-Y"          "tBodyGyroJerk-mean()-Z"         
+--"tBodyGyroJerk-std()-X"           "tBodyGyroJerk-std()-Y"           "tBodyGyroJerk-std()-Z"          
+--"tBodyAccMag-mean()"              "tBodyAccMag-std()"               
+--"tGravityAccMag-mean()"           "tGravityAccMag-std()"
+--"tBodyAccJerkMag-mean()"          "tBodyAccJerkMag-std()"          
+--"tBodyGyroMag-mean()"             "tBodyGyroMag-std()"
+--"tBodyGyroJerkMag-mean()"         "tBodyGyroJerkMag-std()"          
+--"fBodyAcc-mean()-X"               "fBodyAcc-mean()-Y"               "fBodyAcc-mean()-Z"               
+--"fBodyAcc-std()-X"                "fBodyAcc-std()-Y"                "fBodyAcc-std()-Z"                
+--"fBodyAcc-meanFreq()-X"           "fBodyAcc-meanFreq()-Y"           "fBodyAcc-meanFreq()-Z"           
+--"fBodyAccJerk-mean()-X"           "fBodyAccJerk-mean()-Y"           "fBodyAccJerk-mean()-Z"           
+--"fBodyAccJerk-std()-X"            "fBodyAccJerk-std()-Y"            "fBodyAccJerk-std()-Z"            
+--"fBodyAccJerk-meanFreq()-X"       "fBodyAccJerk-meanFreq()-Y"       "fBodyAccJerk-meanFreq()-Z"       
+--"fBodyGyro-mean()-X"              "fBodyGyro-mean()-Y"              "fBodyGyro-mean()-Z"              
+--"fBodyGyro-std()-X"               "fBodyGyro-std()-Y"               "fBodyGyro-std()-Z"               
+--"fBodyGyro-meanFreq()-X"          "fBodyGyro-meanFreq()-Y"          "fBodyGyro-meanFreq()-Z"          
+--"fBodyAccMag-mean()"              "fBodyAccMag-std()"               "fBodyAccMag-meanFreq()"          
+--"fBodyBodyAccJerkMag-mean()"      "fBodyBodyAccJerkMag-std()"       "fBodyBodyAccJerkMag-meanFreq()"  
+--"fBodyBodyGyroMag-mean()"         "fBodyBodyGyroMag-std()"          "fBodyBodyGyroMag-meanFreq()"     
+--"fBodyBodyGyroJerkMag-mean()"     "fBodyBodyGyroJerkMag-std()"      "fBodyBodyGyroJerkMag-meanFreq()"
 
 
+feature, measurement, dimension
+tBodyAcc - mean, std - x,y,z
+tGravityAcc
+tBodyAccJerk
+tBodyGyro
+tBodyGyroJerk
+fBodyAccJerk
+fBodyGyro
 
+tBodyAccMag - mean, std
+tGravityAccMag
+tBodyAccJerkMag
+tBodyGyroMag
+tBodyGyroJerkMag
+fBodyAcc - meanfreq - x,y,z
+fBodyAccJerk
+fBdoyGyro
 
+fBodyAccMag - mean,std,meanfreq
+fBodyBodyAccJerkMag
+fBodyBodyGyroMag
+fBodyBodyGyroJerkMag
 
-
-
-
-
-
-
-
+test <- c("tBodyAcc-mean()-X", "tBodyAcc-mean()-Y", "tBodyAcc-mean()-Z", "tBodyAcc-std()-X", "tBodyAcc-std()-Y", "tBodyAcc-std()-Z")
 
