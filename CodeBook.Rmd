@@ -1,14 +1,16 @@
 ---
 title: "CodeBook"
-author: "Daniel"
+author: "Daniel DeWaters"
 date: "8/7/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 # Code Book
  
- 
+ The tidy dataset consists for 6 columns:
+1. subjectID - numeric, contains ID numbers of the individual obesrvations from the original untidy dataset
+2. activity - factor, contains the activity labels that the observations correspond to. Consists of "walking", "walking upstairs", "walking downstairs", "sitting", "standing", "laying"
+3. feature - factor, contains features that the smartphone accelerometer and gyroscope measured for each observation. Consists of "fBodyAcc", "fBodyAccJerk", "fBodyAccMag", "fBodyBodyAccJerkMag", "fBodyBodyGyroJerkMag", "fBodyBodyGyroMag", "fBodyGyro", "tBodyAcc", "tBodyAccJerk", "tBodyAccJerkMag", "tBodyAccMag", "tBodyGyro", "tBodyGyroJerk", "tBodyGyroJerkMag", "tBodyGyroMag", "tBodyAccMag", "tBodyGyro", "tBodyGyroJerk", "tBodyGyroJerkMag", "tBodyGyroMag", "tGravityAcc", "tGravityAccMag"
+4. measurement - factor, consist of the feature's type of value, "mean" or "standard deviation"
+5. dimension - factor, consists of the dimension that the feature's observation was recorded in, "X", "Y", "Z"
+6. value - numeric, the value of the observation

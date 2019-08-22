@@ -102,6 +102,7 @@ final_tidy_data <-
 
 # Display the final result
 View(final_tidy_data)
+write.table(final_tidy_data, file="tidyData.txt")
 
 
 ## Objective 5 - Make second dataset with average of each variable for each activity and subject
@@ -114,6 +115,6 @@ tidy_data_mean <-
 
 # Display final result of means
 View(tidy_data_mean)
-
+write.table(tidy_data_mean, file="tidyDataMean.txt")
 
 
