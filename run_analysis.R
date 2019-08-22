@@ -28,31 +28,31 @@ features <- read.delim(features_path, header=FALSE, sep="", fill=TRUE)
 
 
 
-## Make descriptive labels
+## Objective 1 - Merge the training and test data set
 # Convert labels to character vectors
 test_labels <- as.character(test_labels$V1)
 train_labels <- as.character(train_labels$V1)
 
-# Replace numbers with descriptive strings and convert to factor
-better_test_labels <- as.factor(revalue(test_labels, replace = c("1"="WALKING", "2"="WALKING UPSTAIRS", "3"="WALKING DOWNSTAIRS", "4"="SITTING", "5"="STANDING", "6"="LAYING")))
-better_train_labels <- as.factor(revalue(train_labels, replace = c("1"="WALKING", "2"="WALKING UPSTAIRS", "3"="WALKING DOWNSTAIRS", "4"="SITTING", "5"="STANDING", "6"="LAYING")))
-
-# Add the new activity labels to test and training set
-labeled_test_data <- cbind(test_data, better_test_labels)
-labeled_train_data <- cbind(train_data, better_train_labels)
+# Add the activity labels to test and training set
+labeled_test_data <- cbind(test_data, test_labels)
+labeled_train_data <- cbind(train_data, train_labels)
 
 # Fix label column name to avoid error when merging
-setnames(labeled_test_data, "better_test_labels", "labels")
-setnames(labeled_train_data, "better_train_labels", "labels")
+setnames(labeled_test_data, "test_labels", "labels")
+setnames(labeled_train_data, "train_labels", "labels")
 
-
-## Merge the train and test data sets
+# Merge the train and test data sets
 combined_data <- rbind(labeled_test_data, labeled_train_data)
 
 
 
-## Fix column names
-# extract actual feature names from table
+## Objective 3 - Add descriptive activity labels to dataset
+combined_data$labels <- as.factor(revalue(combined_data$labels, replace = c("1"="WALKING", "2"="WALKING UPSTAIRS", "3"="WALKING DOWNSTAIRS", "4"="SITTING", "5"="STANDING", "6"="LAYING")))
+
+
+
+## Objective 4 - Appropriately label dataset with descriptive variable names
+# Extract actual feature names from table
 fixed_features <- as.character(features[,2])
 # Add the "activity" column name to vector of column names
 all_features <- append(fixed_features, "activity")
@@ -61,12 +61,14 @@ names(combined_data) <- all_features
 
 
 
-## Extract columns that are means and standard deviations
+## Objective 2 - Extract columns that are means and standard deviations
 # Search for columns with names that contain "mean" or "std"
 relevant_columns <- grep("std|mean", names(combined_data))
 relevant_data <- combined_data[relevant_columns]
+
 # Makes row names as IDs for melting
 subjectID <- 1:dim(relevant_data)[1]
+
 # Re-add activity labels and subject ID columns
 relevant_data <- cbind(relevant_data, combined_data["activity"], subjectID)
 
@@ -79,49 +81,30 @@ melting_columns <- names(combined_data[relevant_columns])
 molten_data <- melt(relevant_data, id=c("subjectID", "activity"), measure.vars = melting_columns)
 # Fix feature column name
 setnames(molten_data, "variable", "feature")
+
 # Cast feature column to character vector for splitting
 molten_data$feature <- as.character(molten_data$feature)
+# Separate features, measurements, and dimensions
+molten_data <- tidyr::separate(data=molten_data, col=feature, into=c("feature", "measurement", "dimension"), sep="-", fill="right")
 
-# add columns for dimension and measurement
-# Searches feature names for dimension 
-make_dimension <- function(feature){
-  sapply(feature, function(x) if(grep("-X", x)) "X" else if(grep("-Y", x)) "Y" else if(grep("-Z", x)) "Z" else NA)
-}
-# Searches feature names for measurement
-make_measurement <- function(measurement){
-  sapply(measurement, function(x) if(grep("mean()", x)) "Mean" else if(grep("std()", x)) "Standard Deviation" else if(grep("meanFreq()", x)) "Mean Frequency")
-}
-#make_dimension <- function(value){
-#       if(grep("-X", value)){"X"}
-#  else if(grep("-Y", value)){"Y"}
-#  else if(grep("-Z", value)){"Z"}
-#  else{return(NA)}
-#}
-# Searches feature names for measurement
-#make_measurement <- function(value){
-#  if(grep("mean()", value)){return("Mean")}
-#  else if(grep("std()", value)){return("Standard Deviation")}
-#  else if(grep("meanFreq()", value)){return("Mean Frequency")}
-#  else{return(NA)}
-#}
-
-final_tidy_data <- tidyr::separate(data=molten_data, col=feature, into=c("feature", "measurement", "dimension"), sep="-", fill="right")
-final_tidy_data %>%
+# Clean up columns 
+final_tidy_data <- 
+  molten_data %>%
+  # Remove parenthesis
   mutate(measurement=gsub("\\(\\)", "", measurement)) %>%
-  mutate(measurement=as.factor(measurement)) %>%
-  mutate(dimension=as.factor(dimension))
-  
-# Adds dimension and measurement columns, cleans variable column
-#final_tidy_data <- molten_data %>%
-#  mutate(dimension=make_dimension(feature)) %>%
-#  mutate(measurement=make_measurement(feature)) %>%
-#  mutate(variable=gsub("-mean|-std|-meanfreq|-X|-Y|-Z|\\(\\)", "", variable))
+  # Replace "std" with "standard deviation" and "meanfreq" with "mean frequency"
+  mutate(measurement = revalue(measurement, replace = c("std"="standard deviation", "meanFreq"="mean frequency"))) %>%
+  # Cast features, measurements, and dimensions to factors
+  mutate(feature = as.factor(feature)) %>%
+  mutate(measurement = as.factor(measurement)) %>%
+  mutate(dimension = as.factor(dimension))
 
+
+# Display the final result
 View(final_tidy_data)
-sum(is.na(final_tidy_data$dimension))
-table()
 
-## Make second dataset with average of each variable for each activity and subject
+
+## Objective 5 - Make second dataset with average of each variable for each activity and subject
 # Make groups
 
 ## Try this vvv
@@ -207,4 +190,3 @@ fBodyBodyGyroMag
 fBodyBodyGyroJerkMag
 
 test <- c("tBodyAcc-mean()-X", "tBodyAcc-mean()-Y", "tBodyAcc-mean()-Z", "tBodyAcc-std()-X", "tBodyAcc-std()-Y", "tBodyAcc-std()-Z")
-
