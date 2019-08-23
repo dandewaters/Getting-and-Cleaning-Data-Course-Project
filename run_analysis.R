@@ -74,7 +74,7 @@ relevant_data <- cbind(relevant_data, combined_data["activity"], subjectID)
 
 
 
-## Reshape Data into narrow form, melting columns by feature, dimension, and measurement (for objective 5)
+## Reshape Data into narrow form, melting columns by feature, dimension, and variable (for objective 5)
 # Get column names for melting (Same columns I used from before)
 melting_columns <- names(combined_data[relevant_columns])
 # Melt features
@@ -84,37 +84,37 @@ setnames(molten_data, "variable", "feature")
 
 # Cast feature column to character vector for splitting
 molten_data$feature <- as.character(molten_data$feature)
-# Separate features, measurements, and dimensions
-molten_data <- tidyr::separate(data=molten_data, col=feature, into=c("feature", "measurement", "dimension"), sep="-", fill="right")
+# Separate features, variables, and dimensions
+molten_data <- tidyr::separate(data=molten_data, col=feature, into=c("feature", "variable", "dimension"), sep="-", fill="right")
 
 # Clean up columns 
 final_tidy_data <- 
   molten_data %>%
   # Remove parenthesis
-  mutate(measurement=gsub("\\(\\)", "", measurement)) %>%
+  mutate(variable=gsub("\\(\\)", "", variable)) %>%
   # Replace "std" with "standard deviation" and "meanfreq" with "mean frequency"
-  mutate(measurement = revalue(measurement, replace = c("std"="standard deviation"))) %>%
-  # Cast features, measurements, and dimensions to factors
+  mutate(variable = revalue(variable, replace = c("std"="standard deviation"))) %>%
+  # Cast features, variables, and dimensions to factors
   mutate(feature = as.factor(feature)) %>%
-  mutate(measurement = as.factor(measurement)) %>%
+  mutate(variable = as.factor(variable)) %>%
   mutate(dimension = as.factor(dimension))
 
 
 # Display the final result
 View(final_tidy_data)
-write.table(final_tidy_data, file="tidyData.txt")
+write.table(final_tidy_data, file="tidyData.txt", row.names=FALSE)
 
 
 ## Objective 5 - Make second dataset with average of each variable for each activity and subject
 tidy_data_mean <-
   final_tidy_data %>%
   # Make groups
-  group_by(feature, measurement, dimension, activity) %>%
+  group_by(feature, variable, dimension, activity) %>%
   # Get means of groups
   summarise(value = mean(value))
 
 # Display final result of means
 View(tidy_data_mean)
-write.table(tidy_data_mean, file="tidyDataMean.txt")
+write.table(tidy_data_mean, file="tidyDataMean.txt", row.names=FALSE)
 
 
