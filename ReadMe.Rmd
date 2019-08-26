@@ -15,7 +15,7 @@ This is the ReadMe file for the Getting and Cleaning Data Course Project, which 
 I start by reading in all the data files: the testing and training data, the activity labels corresponding to the data, and the feature labels. I will list off the objectives from the course project page in the order that I fulfilled then in my script and how I solved each objective.
 
 Objective #1 - "Merge the training and the test sets to create one data set"
-  I merged the activity labels to their corresponding datasets using cbind() and rename the column in both tables to "labels" to avoid any conflict when I merge the testing and training data. I then combine the test and training data using rbind().
+  I merged the activity labels and subject ID's to their corresponding datasets using cbind() and rename the column in both tables to "labels" to avoid any conflict when I merge the testing and training data. I then combine the test and training data using rbind().
 
 
 Objective #3 - "Use descriptive activity names to name the activities in the data set"
@@ -40,7 +40,7 @@ To facilitate objective #5, I melted all of the features columns, converting the
 
 
 The tidy dataset consists for 6 columns:
-1. subjectID - numeric, contains ID numbers of the individual obesrvations from the original untidy dataset
+1. subjectID - factor, contains the subject ID number for hte individual that the observations were run from
 2. activity - factor, contains the activity labels that the observations correspond to. Consists of "walking", "walking upstairs", "walking downstairs", "sitting", "standing", "laying"
 3. feature - factor, contains features that the smartphone accelerometer and gyroscope measured for each observation. Consists of "fBodyAcc", "fBodyAccJerk", "fBodyAccMag", "fBodyBodyAccJerkMag", "fBodyBodyGyroJerkMag", "fBodyBodyGyroMag", "fBodyGyro", "tBodyAcc", "tBodyAccJerk", "tBodyAccJerkMag", "tBodyAccMag", "tBodyGyro", "tBodyGyroJerk", "tBodyGyroJerkMag", "tBodyGyroMag", "tBodyAccMag", "tBodyGyro", "tBodyGyroJerk", "tBodyGyroJerkMag", "tBodyGyroMag", "tGravityAcc", "tGravityAccMag"
 4. variable - factor, consists of the feature's type of value, "mean" or "standard deviation"
@@ -49,4 +49,4 @@ The tidy dataset consists for 6 columns:
 
 
 Objective #5 -"From the data set in step 4, create a second, independent tidy data set with the average of each variable for each activity and each subject"
-  I used group_by() to gather groups of each feature, variable, dimension, and activity, and then I used summarise() to apply the mean to all of the groups, resulting in the final tidy data means.
+  I used group_by() to gather groups of each subject, feature, measurement, dimension, and activity, and then I used summarise() to apply the mean to all of the groups, resulting in the final tidy data means.
