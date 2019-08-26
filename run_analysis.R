@@ -126,7 +126,7 @@ write.table(final_tidy_data, file="tidyData.txt", row.names=FALSE)
 tidy_data_mean <-
   final_tidy_data %>%
   # Make groups
-  group_by(feature, variable, dimension, activity) %>%
+  group_by(subjectID, feature, variable, dimension, activity) %>%
   # Get means of groups
   summarise(value = mean(value))
 
