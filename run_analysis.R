@@ -86,6 +86,9 @@ relevant_data <- combined_data[relevant_columns]
 # Re-add activity labels and subject ID columns
 relevant_data <- cbind(relevant_data, combined_data["activity"], combined_data["subjectID"])
 
+# Convert subject IDs column to factor
+relevant_data$subjectID <- as.factor(relevant_data$subjectID)
+
 
 
 ## Reshape Data into narrow form, melting columns by feature, dimension, and variable (for objective 5)
@@ -119,7 +122,7 @@ View(final_tidy_data)
 write.table(final_tidy_data, file="tidyData.txt", row.names=FALSE)
 
 
-## Objective 5 - Make second dataset with average of each variable for each activity and subject
+## Objective 5 - Make second dataset with average of each subject for each variable, activity, and subject
 tidy_data_mean <-
   final_tidy_data %>%
   # Make groups
