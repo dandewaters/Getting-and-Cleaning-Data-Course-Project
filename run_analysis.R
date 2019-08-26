@@ -4,25 +4,38 @@ library(reshape2)
 library(data.table)
 library(tidyverse)
 
+# Get data file
+data_file_name <- "UCI HAR Dataset"
+
+if(!file.exists(data_file_name)){
+  fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+  download.file(fileURL, destfile = "./Data.zip")
+  unzip("./Data.zip", exdir = "./", overwrite = TRUE)
+}
+
 ## File paths
-# Test datasets and its corresponding activity labels
-test_data_path <- "./Data/test/X_test.txt"
-test_labels_path <- "./Data/test/y_test.txt"
-# Training dataset and its corresponding activity labels
-train_data_path <- "./Data/train/X_train.txt"
-train_labels_path <- "./Data/train/y_train.txt"
+# Test datasets and its corresponding activity labels and subject IDs
+test_data_path <- "./UCI HAR Dataset/test/X_test.txt"
+test_labels_path <- "./UCI HAR Dataset/test/y_test.txt"
+test_subjects_path <- "./UCI HAR Dataset/test/subject_test.txt"
+# Training dataset and its corresponding activity labels and subject IDs
+train_data_path <- "./UCI HAR Dataset/train/X_train.txt"
+train_labels_path <- "./UCI HAR Dataset/train/y_train.txt"
+train_subjects_path <- "./UCI HAR Dataset/train/subject_train.txt"
 # Column names
-features_path <- "./Data/features.txt"
+features_path <- "./UCI HAR Dataset/features.txt"
 
 
 
 ## Read in files
 # Test datasets and its corresponding activity labels
 test_data <- read.delim(test_data_path, header=FALSE, sep="", fill=TRUE)
-test_labels <- read.delim(test_labels_path, header=FALSE, sep="", fill = TRUE)
+test_labels <- read.delim(test_labels_path, header=FALSE, sep="", fill=TRUE)
+test_subjects <- read.delim(test_subjects_path, header=FALSE, sep="", fill=TRUE)
 # Training dataset and its corresponding activity labels
 train_data <- read.delim(train_data_path, header=FALSE, sep="", fill=TRUE,)
 train_labels <- read.delim(train_labels_path, header=FALSE, sep="", fill=TRUE)
+train_subjects <- read.delim(train_subjects_path, header=FALSE, sep="", fill=TRUE)
 # Column names
 features <- read.delim(features_path, header=FALSE, sep="", fill=TRUE)
 
@@ -33,11 +46,15 @@ features <- read.delim(features_path, header=FALSE, sep="", fill=TRUE)
 test_labels <- as.character(test_labels$V1)
 train_labels <- as.character(train_labels$V1)
 
-# Add the activity labels to test and training set
-labeled_test_data <- cbind(test_data, test_labels)
-labeled_train_data <- cbind(train_data, train_labels)
+# Fix subject ID column names for merging
+names(test_subjects) <- "subjectID"
+names(train_subjects) <- "subjectID"
 
-# Fix label column name to avoid error when merging
+# Add the activity labels to test and training set
+labeled_test_data <- cbind(test_data, test_labels, test_subjects)
+labeled_train_data <- cbind(train_data, train_labels, train_subjects)
+
+# Fix label and subjectID column names to avoid error when merging
 setnames(labeled_test_data, "test_labels", "labels")
 setnames(labeled_train_data, "train_labels", "labels")
 
@@ -55,7 +72,7 @@ combined_data$labels <- as.factor(revalue(combined_data$labels, replace = c("1"=
 # Extract actual feature names from table
 fixed_features <- as.character(features[,2])
 # Add the "activity" column name to vector of column names
-all_features <- append(fixed_features, "activity")
+all_features <- append(fixed_features, c("activity", "subjectID"))
 # Add column names to data frame
 names(combined_data) <- all_features
 
@@ -66,11 +83,8 @@ names(combined_data) <- all_features
 relevant_columns <- grep("std\\(\\)|mean\\(\\)", names(combined_data))
 relevant_data <- combined_data[relevant_columns]
 
-# Makes row names as IDs for melting
-subjectID <- 1:dim(relevant_data)[1]
-
 # Re-add activity labels and subject ID columns
-relevant_data <- cbind(relevant_data, combined_data["activity"], subjectID)
+relevant_data <- cbind(relevant_data, combined_data["activity"], combined_data["subjectID"])
 
 
 
