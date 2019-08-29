@@ -6,7 +6,6 @@ library(tidyverse)
 
 # Get data file
 data_file_name <- "UCI HAR Dataset"
-
 if(!file.exists(data_file_name)){
   fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
   download.file(fileURL, destfile = "./Data.zip")
@@ -111,12 +110,18 @@ final_tidy_data <-
   mutate(variable=gsub("\\(\\)", "", variable)) %>%
   # Replace "std" with "standard deviation" and "meanfreq" with "mean frequency"
   mutate(variable = revalue(variable, replace = c("std"="standard deviation"))) %>%
+  # Clean up feature names
+  mutate(feature = gsub("^t", "TimeDomain", feature)) %>%
+  mutate(feature = gsub("^f", "FrequencyDomain", feature)) %>%
+  mutate(feature = gsub("Freq", "Frequency", feature)) %>%
+  mutate(feature = gsub("Mag", "Magnitude", feature)) %>%
+  mutate(feature = gsub("Acc", "Accelerometer", feature)) %>%
+  mutate(feature = gsub("Gyro", "Gyroscope", feature)) %>%
   # Cast features, variables, and dimensions to factors
   mutate(feature = as.factor(feature)) %>%
   mutate(variable = as.factor(variable)) %>%
   mutate(dimension = as.factor(dimension))
-
-
+  
 # Display the final result
 View(final_tidy_data)
 write.table(final_tidy_data, file="tidyData.txt", row.names=FALSE)

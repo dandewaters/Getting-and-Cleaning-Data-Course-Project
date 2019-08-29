@@ -9,10 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This is the ReadMe file for the Getting and Cleaning Data Course Project, which will explain my analysis process
+This is the ReadMe file for the Getting and Cleaning Data Course Project, which will explain my analysis process. There is no need to download the dataset beforehand, this script takes care of acquiring and unzipping the data.
+
+
+
+***Take note that this script makes the NARROW version of this dataset, which is accepted by the criteria for this project. My script still calculates the mean for every subject, feature, variable, and dimension combination as everyone else's does in the wide form of the dataset. I chose to use the narrow form because all of the columns in the wide format have a lot of characteristics in common, and I think the narrow form organizes those characteristics a lot better.
+
 
 
 I start by reading in all the data files: the testing and training data, the activity labels corresponding to the data, and the feature labels. I will list off the objectives from the course project page in the order that I fulfilled then in my script and how I solved each objective.
+
 
 Objective #1 - "Merge the training and the test sets to create one data set"
   I merged the activity labels and subject ID's to their corresponding datasets using cbind() and rename the column in both tables to "labels" to avoid any conflict when I merge the testing and training data. I then combine the test and training data using rbind().
