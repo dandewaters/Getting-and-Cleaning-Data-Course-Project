@@ -8,7 +8,7 @@ library(tidyverse)
 data_file_name <- "UCI HAR Dataset"
 if(!file.exists(data_file_name)){
   fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
-  download.file(fileURL, destfile = "./Data.zip")
+  download.file(fileURL, destfile = "./Data.zip", method="curl")
   unzip("./Data.zip", exdir = "./", overwrite = TRUE)
 }
 
